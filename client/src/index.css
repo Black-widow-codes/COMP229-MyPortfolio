@@ -1,0 +1,7 @@
+/* Global theme variables and base styles used throughout the portfolio */
+:root { --ink: #091521; --muted: #526575; --paper: #eff7f5; --cream: #dcebe9; --line: rgba(9, 21, 33, 0.18); --lime: #c8ff4a; --cyan: #00c9e8; --orange: #ff725e; --serif: Georgia, 'Times New Roman', serif; --sans: 'Trebuchet MS', 'Segoe UI', sans-serif; --mono: 'Courier New', monospace; font-family: var(--sans); color: var(--ink); background: var(--paper); font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; min-width: 320px; background-color: var(--paper); background-image: linear-gradient(rgba(0, 201, 232, .055) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 201, 232, .055) 1px, transparent 1px); background-size: 34px 34px; }
+a { color: inherit; }
+#root { min-height: 100vh; }

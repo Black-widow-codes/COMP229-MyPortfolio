@@ -1,0 +1,12 @@
+.env
+.env.*
+!.env.example
+node_modules/
+client/node_modules/
+
+# Build output
+dist/
+client/dist/
+# Local files
+.venv/
+.vercel/
