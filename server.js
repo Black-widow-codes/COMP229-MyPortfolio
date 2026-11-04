@@ -17,9 +17,9 @@ mongoose.connection.on("error", () => {
   console.error("MongoDB connection failed. Check your database configuration.");
 });
 
-app.get("/", (req, res) => {
-  res.json({ message: "Welcome to User application." });
-});
+app.get('/', (req, res) => {
+  res.json({ message: 'Welcome to My Portfolio application.' })
+})
 
 app.listen(config.port, (err) => {
   if (err) {
