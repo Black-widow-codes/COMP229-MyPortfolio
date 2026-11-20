@@ -3,7 +3,12 @@ import extend from "lodash/extend.js";
 import errorHandler from "./error.controller.js";
 
 const create = async (req, res) => {
-    const user = new User(req.body);
+  const user = new User({
+    name: req.body.name,
+    email: req.body.email,
+    password: req.body.password,
+    role: 'user'
+  });
     try {
         await user.save();
         return res.status(200).json({
@@ -51,7 +56,16 @@ const userByID = async (req, res, next, id) => {
   const update = async (req, res) => {
     try {
       let user = req.profile;
-      user = extend(user, req.body);
+      const allowedUpdates = {
+        name: req.body.name ?? user.name,
+        email: req.body.email ?? user.email
+      };
+      
+      user = extend(user, allowedUpdates);
+      
+      if (typeof req.body.password === 'string' && req.body.password.length > 0) {
+        user.password = req.body.password;
+      }
       user.updated = Date.now();
       await user.save();
       user.hashed_password = undefined;

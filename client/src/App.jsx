@@ -1,5 +1,5 @@
 // Main application component
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import "./App.css";
 
@@ -14,9 +14,79 @@ const projects = [
 const services = ["Technical support and troubleshooting", "Web design and development", "Digital security and privacy awareness", "Plain-language technology writing", "Digital health workflow analysis", ];
 
 // Shared site header containing the portfolio branding and navigation
+
 function Header() {
-  return <header className="topbar"><Link className="brand" to="/" aria-label="Return to home"><span className="brand-mark">BS</span><span>Bryan Senfuma<span className="brand-dot">.</span></span></Link><nav className="nav-links" aria-label="Main navigation"><NavLink to="/about">About</NavLink><NavLink to="/projects">Projects</NavLink><NavLink to="/education">Education</NavLink><NavLink to="/services">Services</NavLink><NavLink to="/contact">Contact</NavLink></nav></header>;
+  const navigate = useNavigate();
+
+  const [auth, setAuth] = useState(() => {
+    try {
+      return JSON.parse(sessionStorage.getItem("jwt"));
+    } catch {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    const refreshAuth = () => {
+      try {
+        setAuth(JSON.parse(sessionStorage.getItem("jwt")));
+      } catch {
+        setAuth(null);
+      }
+    };
+
+    window.addEventListener("auth-change", refreshAuth);
+
+    return () => {
+      window.removeEventListener("auth-change", refreshAuth);
+    };
+  }, []);
+
+  async function handleSignout() {
+    try {
+      await fetch("/auth/signout", {
+        method: "GET"
+      });
+    } catch (error) {
+      console.error("Signout request failed:", error);
+    } finally {
+      sessionStorage.removeItem("jwt");
+      setAuth(null);
+      navigate("/signin");
+    }
+  }
+
+  return (
+    <header className="topbar">
+      <Link className="brand" to="/" aria-label="Return to home">
+        <span className="brand-mark">BS</span>
+        <span>
+          Bryan Senfuma<span className="brand-dot">.</span>
+        </span>
+      </Link>
+
+      <nav className="nav-links" aria-label="Main navigation">
+        <NavLink to="/about">About</NavLink>
+        <NavLink to="/projects">Projects</NavLink>
+        <NavLink to="/education">Education</NavLink>
+        <NavLink to="/services">Services</NavLink>
+        <NavLink to="/contact">Contact</NavLink>
+
+        {auth?.token ? (
+          <button type="button" onClick={handleSignout}>
+            Sign out
+          </button>
+        ) : (
+          <>
+            <NavLink to="/signin">Sign in</NavLink>
+            <NavLink to="/signup">Sign up</NavLink>
+          </>
+        )}
+      </nav>
+    </header>
+  );
 }
+
 
 // Shared footer displayed across all portfolio pages
 function Footer() {
@@ -44,14 +114,163 @@ function About() {
 }
 
 // Projects page showcasing selected work, contributions, and outcomes
+
 function Projects() {
-  return <section className="section page-section"><PageIntro number="02" label="Projects" title="A practical body of work in progress." /><p className="page-lead">These projects reflect the questions I keep returning to: how can technology improve safety, build digital confidence, and make essential services easier to access?</p><div className="project-grid">{projects.map((project, index) => <article className="project-card" key={project.title}><img className={`project-image project-image-${index + 1}`} src={project.image} alt={`Screenshot of ${project.title}`} /><p className="eyebrow">{project.type}</p><h3>{project.title}</h3><p>{project.description}</p><p className="project-outcome"><strong>My contribution:</strong> {project.outcome}</p><a className="project-link" href={project.url} target="_blank" rel="noreferrer">View {project.title} on GitHub <span></span></a></article>)}</div></section>;
+  const [databaseProjects, setDatabaseProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function loadProjects() {
+      try {
+        const response = await fetch("/api/projects");
+
+        if (!response.ok) {
+          throw new Error("Could not load projects.");
+        }
+
+        const data = await response.json();
+        setDatabaseProjects(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadProjects();
+  }, []);
+
+  return (
+    <section className="section page-section">
+      <PageIntro
+        number="02"
+        label="Projects"
+        title="A practical body of work in progress."
+      />
+
+      <p className="page-lead">
+        These projects reflect the questions I keep returning to:
+        how can technology improve safety, build digital confidence,
+        and make essential services easier to access?
+      </p>
+
+      {loading && <p>Loading projects...</p>}
+      {error && <p role="alert">{error}</p>}
+
+      {!loading && !error && (
+        <div className="project-grid">
+          {databaseProjects.map((project, index) => (
+            <article className="project-card" key={project._id}>
+              <img
+                className={`project-image project-image-${index + 1}`}
+                src={project.image}
+                alt={`Screenshot of ${project.title}`}
+              />
+
+              <p className="eyebrow">{project.type}</p>
+
+              <h3>{project.title}</h3>
+
+              <p>{project.description}</p>
+
+              <p className="project-outcome">
+                <strong>My contribution:</strong> {project.outcome}
+              </p>
+
+              <a
+                className="project-link"
+                href={project.url}
+                target="_blank"
+                rel="noreferrer"
+              >
+                View {project.title} on GitHub
+              </a>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
 }
 
+
 // Education page listing academic qualifications and professional certifications
+
 function Education() {
-  return <section className="section split-section page-section"><div className="section-intro"><PageIntro number="03" label="Education" title="A technical foundation with a public-interest focus." /><p>My education combines healthcare technology, systems support, cybersecurity, cloud security, and digital health innovation.</p><p className="education-skills"><strong>Focus areas:</strong> Healthcare information systems, workflow analysis, software development with Python, C#, and JavaScript, web technologies including HTML, CSS, React, and Vite, networking, cybersecurity awareness, Linux/Unix environments, databases, and technical support.</p></div><div className="timeline"><div className="timeline-item"><span>Expected 2028</span><div><h3>Digital Health Engineering Technology Advanced Diploma</h3><p>Centennial College · Toronto, ON</p></div></div><div className="timeline-item"><span>2004</span><div><h3>Computer Engineering Diploma</h3><p>Aptech Education Centre · Kampala, Uganda</p></div></div><div className="timeline-item"><span>2025</span><div><h3>Certificate of Cloud Security Knowledge (CCSK)</h3><p>Cloud Security Alliance</p></div></div><div className="timeline-item"><span>2019</span><div><h3>CompTIA Security+</h3><p>CompTIA</p></div></div><div className="timeline-item"><span>2020</span><div><h3>Oracle Cloud Infrastructure Certification</h3><p>Oracle</p></div></div><div className="timeline-item"><span>2024</span><div><h3>Information Technology Support</h3><p>Alison</p></div></div><div className="timeline-item"><span>2024</span><div><h3>ITIL Fundamentals</h3><p>PeopleCert</p></div></div><div className="timeline-item"><span>2007</span><div><h3>Microsoft Certified Professional (MCP)</h3><p>Microsoft</p></div></div></div></section>;
+  const [qualifications, setQualifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function loadQualifications() {
+      try {
+        const response = await fetch("/api/qualifications");
+
+        if (!response.ok) {
+          throw new Error("Could not load qualifications.");
+        }
+
+        const data = await response.json();
+        setQualifications(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadQualifications();
+  }, []);
+
+  return (
+    <section className="section split-section page-section">
+      <div className="section-intro">
+        <PageIntro
+          number="03"
+          label="Education"
+          title="A technical foundation with a public-interest focus."
+        />
+
+        <p>
+          My education combines healthcare technology, systems support,
+          cybersecurity, cloud security, and digital health innovation.
+        </p>
+
+        <p className="education-skills">
+          <strong>Focus areas:</strong> Healthcare information systems,
+          workflow analysis, software development with Python, C#, and
+          JavaScript, web technologies including HTML, CSS, React, and Vite,
+          networking, cybersecurity awareness, Linux/Unix environments,
+          databases, and technical support.
+        </p>
+      </div>
+
+      <div className="timeline">
+        {loading && <p>Loading qualifications...</p>}
+
+        {error && <p role="alert">{error}</p>}
+
+        {!loading && !error &&
+          qualifications.map((qualification) => (
+            <div
+              className="timeline-item"
+              key={qualification._id}
+            >
+              <span>{qualification.period}</span>
+
+              <div>
+                <h3>{qualification.title}</h3>
+                <p>{qualification.institution}</p>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+  );
 }
+
 
 // Services page presenting technical and digital services offered
 function Services() {
@@ -59,18 +278,174 @@ function Services() {
 }
 
 // Contact page with contact information and an interactive message form
+
 function Contact() {
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    message: ""
+  });
+
   const [submitted, setSubmitted] = useState(false);
-  const navigate = useNavigate();
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleSubmit(event) {
+  function handleChange(event) {
+    const { name, value } = event.target;
+
+    setForm((previous) => ({
+      ...previous,
+      [name]: value
+    }));
+  }
+
+  async function handleSubmit(event) {
     event.preventDefault();
-    setSubmitted(true);
-    setTimeout(() => navigate("/"), 1200);
+
+    setSubmitting(true);
+    setSubmitted(false);
+    setError("");
+
+    try {
+      const response = await fetch("/api/contacts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          firstname: form.firstName.trim(),
+          lastname: form.lastName.trim(),
+          email: form.email.trim(),
+          phone: form.phone.trim(),
+          message: form.message.trim()
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("Could not send your message.");
+      }
+
+      setSubmitted(true);
+
+      setForm({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        message: ""
+      });
+    } catch (err) {
+      setError(err.message || "Something went wrong.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
-  return <section className="section contact-section page-section"><div className="section-intro"><PageIntro number="05" label="Contact me" title="Start with a practical question." /><p>Email: <a href="mailto:bsenfuma@my.centennialcollege.ca">bsenfuma@my.centennialcollege.ca</a><br />Phone: <a href="tel:+14373282640">437 328 2640</a></p></div><form className="contact-form" onSubmit={handleSubmit}><div className="form-row"><label>First name<input name="firstName" autoComplete="given-name" required /></label><label>Last name<input name="lastName" autoComplete="family-name" required /></label></div><div className="form-row"><label>Email address<input type="email" name="email" autoComplete="email" required /></label><label>Contact number<input type="tel" name="phone" autoComplete="tel" /></label></div><label>Message<textarea name="message" rows="5" required /></label><button className="primary-button" type="submit">Send Bryan a message <span></span></button>{submitted && <p className="form-success" role="status">Thanks. Your message has been captured.</p>}</form></section>;
-  }
+  return (
+    <section className="section contact-section page-section">
+      <div className="section-intro">
+        <PageIntro
+          number="05"
+          label="Contact me"
+          title="Start with a practical question."
+        />
+
+        <p>
+          Email:{" "}
+          <a href="mailto:bsenfuma@my.centennialcollege.ca">
+            bsenfuma@my.centennialcollege.ca
+          </a>
+          <br />
+          Phone: <a href="tel:+14373282640">437 328 2640</a>
+        </p>
+      </div>
+
+      <form className="contact-form" onSubmit={handleSubmit}>
+        <div className="form-row">
+          <label>
+            First name
+            <input
+              name="firstName"
+              autoComplete="given-name"
+              value={form.firstName}
+              onChange={handleChange}
+              required
+            />
+          </label>
+
+          <label>
+            Last name
+            <input
+              name="lastName"
+              autoComplete="family-name"
+              value={form.lastName}
+              onChange={handleChange}
+              required
+            />
+          </label>
+        </div>
+
+        <div className="form-row">
+          <label>
+            Email address
+            <input
+              type="email"
+              name="email"
+              autoComplete="email"
+              value={form.email}
+              onChange={handleChange}
+              required
+            />
+          </label>
+
+          <label>
+            Contact number
+            <input
+              type="tel"
+              name="phone"
+              autoComplete="tel"
+              value={form.phone}
+              onChange={handleChange}
+            />
+          </label>
+        </div>
+
+        <label>
+          Message
+          <textarea
+            name="message"
+            rows="5"
+            value={form.message}
+            onChange={handleChange}
+            required
+          />
+        </label>
+
+        <button
+          className="primary-button"
+          type="submit"
+          disabled={submitting}
+        >
+          {submitting ? "Sending..." : "Send Bryan a message"}
+        </button>
+
+        {submitted && (
+          <p className="form-success" role="status">
+            Thank you. Your message has been sent successfully.
+          </p>
+        )}
+
+        {error && (
+          <p role="alert">
+            {error}
+          </p>
+        )}
+      </form>
+    </section>
+  );
+}
 
   // Export components for use in the application's route configuration
   export { Layout, Home, About, Projects, Education, Services, Contact };

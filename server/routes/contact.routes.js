@@ -1,21 +1,39 @@
+
 import express from 'express'
 import contactCtrl from '../controllers/contact.controller.js'
+import authCtrl from '../controllers/auth.controller.js'
 
 const router = express.Router()
 
-// Create, retrieve, or delete all contacts
+// Visitors can submit contact messages.
+// Only Admin can view all messages.
 router.route('/api/contacts')
   .post(contactCtrl.create)
-  .get(contactCtrl.list)
-  .delete(contactCtrl.removeAll)
+  .get(
+    authCtrl.requireSignin,
+    authCtrl.requireAdmin,
+    contactCtrl.list
+  )
 
-// Retrieve, update, or delete an individual contact by ID
+// Only Admin can view, update, or delete messages.
 router.route('/api/contacts/:contactId')
-  .get(contactCtrl.read)
-  .put(contactCtrl.update)
-  .delete(contactCtrl.remove)
+  .get(
+    authCtrl.requireSignin,
+    authCtrl.requireAdmin,
+    contactCtrl.read
+  )
+  .put(
+    authCtrl.requireSignin,
+    authCtrl.requireAdmin,
+    contactCtrl.update
+  )
+  .delete(
+    authCtrl.requireSignin,
+    authCtrl.requireAdmin,
+    contactCtrl.remove
+  )
 
-// Load the contact when a contactId is provided
+// Load contact by ID
 router.param('contactId', contactCtrl.contactByID)
 
 export default router

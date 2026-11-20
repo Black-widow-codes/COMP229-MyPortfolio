@@ -1,28 +1,39 @@
+
 import mongoose from 'mongoose'
 
 const ProjectSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
-  firstname: {
+  type: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
-  lastname: {
+  description: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
-  email: {
+  outcome: {
     type: String,
-    required: true
+    default: ''
+  },
+  image: {
+    type: String,
+    default: ''
+  },
+  url: {
+    type: String,
+    default: ''
   },
   completion: {
     type: Date
-  },
-  description: {
-    type: String
   }
+}, {
+  timestamps: true
 })
 
 export default mongoose.model('Project', ProjectSchema)

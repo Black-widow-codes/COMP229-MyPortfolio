@@ -1,28 +1,28 @@
+
 import mongoose from 'mongoose'
 
 const QualificationSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
-  firstname: {
+  period: {
     type: String,
-    required: true
+    required: true,
+    trim: true
   },
-  lastname: {
+  institution: {
     type: String,
-    required: true
-  },
-  email: {
-    type: String,
-    required: true
-  },
-  completion: {
-    type: Date
+    required: true,
+    trim: true
   },
   description: {
-    type: String
+    type: String,
+    default: ''
   }
+}, {
+  timestamps: true
 })
 
 export default mongoose.model('Qualification', QualificationSchema)
