@@ -71,6 +71,9 @@ function Header() {
         <NavLink to="/education">Education</NavLink>
         <NavLink to="/services">Services</NavLink>
         <NavLink to="/contact">Contact</NavLink>
+        {auth?.token && auth?.user?.role === "admin" && (
+  <NavLink to="/admin">Admin</NavLink>
+)}
 
         {auth?.token ? (
           <button type="button" onClick={handleSignout}>
