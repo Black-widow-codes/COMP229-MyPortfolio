@@ -17,9 +17,12 @@ mongoose.connection.on("error", () => {
   console.error("MongoDB connection failed. Check your database configuration.");
 });
 
-app.get('/', (req, res) => {
-  res.json({ message: 'Welcome to My Portfolio application.' })
-})
+// Backend welcome route for local development
+if (config.env !== "production") {
+  app.get("/", (req, res) => {
+    res.json({ message: "Welcome to My Portfolio application." });
+  });
+}
 
 app.listen(config.port, (err) => {
   if (err) {

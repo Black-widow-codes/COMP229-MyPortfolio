@@ -5,6 +5,8 @@ import cookieParser from "cookie-parser";
 import compress from "compression";
 import cors from "cors";
 import helmet from "helmet";
+import path from "path";
+import { fileURLToPath } from "url";
 
 import userRoutes from './routes/user.routes.js';
 import authRoutes from './routes/auth.routes.js';
@@ -13,6 +15,9 @@ import projectRoutes from './routes/project.routes.js';
 import qualificationRoutes from './routes/qualification.routes.js';
 
 const app = express();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Middleware
 app.use(helmet());
@@ -28,6 +33,17 @@ app.use('/', authRoutes);
 app.use('/', contactRoutes);
 app.use('/', projectRoutes);
 app.use('/', qualificationRoutes);
+
+// Serve React frontend in production
+if (process.env.NODE_ENV === "production") {
+  const clientPath = path.join(__dirname, "../client/dist");
+
+  app.use(express.static(clientPath));
+
+  app.get(/^(?!\/(?:api|auth)(?:\/|$)).*$/, (req, res) => {
+    res.sendFile(path.join(clientPath, "index.html"));
+  });
+}
 
 // Error handling
 app.use((err, req, res, next) => {

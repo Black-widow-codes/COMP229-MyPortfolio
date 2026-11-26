@@ -21,6 +21,8 @@
     "nodemon": "^3.1.14"
   },
   "scripts": {
-    "dev": "concurrently \"npm run dev --prefix client\" \"nodemon server.js\""
-  }
+  "dev": "concurrently \"npm run dev --prefix client\" \"nodemon server.js\"",
+  "build": "npm ci --prefix client --include=dev && npm run build --prefix client",
+  "start": "node server.js"
+}
 }
