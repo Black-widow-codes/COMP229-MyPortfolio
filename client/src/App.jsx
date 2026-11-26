@@ -187,7 +187,7 @@ function Projects() {
                 target="_blank"
                 rel="noreferrer"
               >
-                View {project.title} on GitHub
+                View {project.title}
               </a>
             </article>
           ))}
